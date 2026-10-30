@@ -25,7 +25,7 @@ thin adapter: it implements no notification code of its own.
 | | |
 |---|---|
 | supported | macOS, kjak v1.1.0 (plugin protocol v1), terminal-notifier 3.1.0, a logged-in GUI session |
-| checked on a real Mac | terminal-notifier 3.1.0 alone on an Intel (x86_64) Mac from iTerm2. This plugin through kjak: **not yet** |
+| checked on a real Mac | Intel (x86_64), macOS 15.7.9, terminal-notifier 3.1.0 (Homebrew, built from source), kjak v1.1.0, from a terminal of the logged-in user (2026-10-31): the plugin alone and through kjak, Japanese text and emoji, a two-line body; shown as from terminal-notifier |
 | not checked | Apple silicon, other macOS versions, terminals other than iTerm2 |
 
 ## Quick start

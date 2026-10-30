@@ -13,7 +13,9 @@ screen:
 - the notification settings of terminal-notifier (System Settings,
   Notifications): alerts off, banners off, or notifications off — the last
   one is reported (`rejected`), the others are not;
-- a locked screen, a screen saver, another user's session on the screen.
+- a locked screen, a screen saver, another user's session on the screen;
+- a Mac asleep: notifications sent then were accepted (`delivered`) and
+  not seen (observed on the owner's Mac).
 
 `-ignoreDnD` is not used: terminal-notifier 3.1.0 documents it as a no-op
 without an Apple entitlement.
@@ -24,7 +26,7 @@ without an Apple entitlement.
 |---|---|
 | operating system | macOS only; elsewhere every send is `rejected` |
 | supported | macOS with terminal-notifier 3.1.0 in a logged-in GUI session, kjak v1.1.0 (plugin protocol v1) |
-| checked on a real Mac | terminal-notifier 3.1.0 alone, on an Intel (x86_64) Mac, from iTerm2 (owner). Through this plugin and kjak: not yet (see the tutorial, "Test notification") |
+| checked on a real Mac | Intel (x86_64), macOS 15.7.9, terminal-notifier 3.1.0 (Homebrew, built from source), kjak v1.1.0, from a terminal of the logged-in user (owner, 2026-10-31): the plugin alone, through kjak, Japanese text and emoji, a two-line body with the URL; no process left; shown as from terminal-notifier |
 | not checked | Apple silicon, other macOS versions, other terminals, Terminal.app, launchd jobs, SSH sessions |
 
 ## No GUI session

@@ -17,7 +17,7 @@
 | | |
 |---|---|
 | 対応 | macOS（ログイン中の GUI セッション）、kjak v1.1.0、terminal-notifier 3.1.0 |
-| 実機で確認済み | terminal-notifier 3.1.0 単体（Intel（x86_64）の Mac、iTerm2 から）。このプラグインを kjak 経由で使う場合は未確認（9 章） |
+| 実機で確認済み | Intel（x86_64）、macOS 15.7.9、terminal-notifier 3.1.0、kjak v1.1.0。ログイン中のユーザーの端末から、9 章と 10 章の手順（terminal-notifier からの通知として表示） |
 | 未確認 | Apple silicon、ほかの macOS のバージョン、ほかの端末アプリ、SSH、launchd |
 
 ## 4. 必要なもの

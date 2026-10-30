@@ -22,7 +22,7 @@ and terminal-notifier posts it to the macOS notification center.
 | | |
 |---|---|
 | supported | macOS, in a logged-in GUI session; kjak v1.1.0; terminal-notifier 3.1.0 |
-| checked on a real Mac | terminal-notifier 3.1.0 alone, Intel (x86_64), from iTerm2. This plugin through kjak: not yet (section 9) |
+| checked on a real Mac | Intel (x86_64), macOS 15.7.9, terminal-notifier 3.1.0, kjak v1.1.0, from a terminal of the logged-in user: the steps of section 9 and 10 (shown as from terminal-notifier) |
 | not checked | Apple silicon, other macOS versions, other terminals, SSH, launchd |
 
 ## 4. Dependencies

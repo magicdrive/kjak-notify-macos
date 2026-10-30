@@ -82,3 +82,20 @@ Confirmed: `..` in paths, link chains, the check-then-run window (only
 directories of root, the user or admin are trusted), the wrapper pattern
 (CRLF, spaces, `$`, size), case and Unicode (refused, safe side), the real
 install (resolved, not run).
+
+## Real-device check (owner, 2026-10-31)
+
+Intel (x86_64), macOS 15.7.9, terminal-notifier 3.1.0 from Homebrew (built
+from source), kjak v1.1.0, an isolated kjak configuration, run from a
+terminal of the logged-in user, with the owner's approval.
+
+| step | reported | on the screen |
+|---|---|---|
+| the plugin alone | `delivered`, exit 0 | shown |
+| through kjak | `ok mac (external) delivered`, exit 0 | shown |
+| Japanese, emoji, two-line body, URL | `success`, `delivered` | shown, not garbled |
+| processes left | none | |
+| shown as from | | terminal-notifier |
+
+A first run while the Mac was asleep reported the same `delivered` results,
+and nothing was seen: `delivered` is the notification center's acceptance.
