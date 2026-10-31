@@ -99,3 +99,29 @@ terminal of the logged-in user, with the owner's approval.
 
 A first run while the Mac was asleep reported the same `delivered` results,
 and nothing was seen: `delivered` is the notification center's acceptance.
+
+## Release pipeline v0.1.0 (2026-10-31)
+
+Hephaestus v1.5.0, GitHub Releases, `magicdrive/tap`. Checked locally on an
+Intel Mac (macOS 15.7.9, Homebrew 7.0.11, `/usr/local`); nothing was
+pushed or published. An independent read-only review of the workflows,
+configurations and scripts followed.
+
+| finding | severity | status |
+|---|---|---|
+| kjak v1.1.0 refuses the plugin installed by Homebrew: `/usr/local/Cellar` is mode 775, group admin, and kjak allows a group-writable directory above a plugin only when it is sticky. Reproduced with the real formula (`scripts/homebrew-e2e.sh`). Not checked on Apple silicon (`/opt/homebrew`). | High (Homebrew users) | open: needs kjak; caveats and README give the workaround (a copy pinned with `path =`), checked with `kjak send --dry-run` |
+| Hephaestus v1.5.0 writes a top-level `depends_on "x"` before its own `depends_on :macos`; `brew audit --strict` refuses that order | Medium | worked around: the dependency is declared `os: mac` (inside `on_macos`); Hephaestus unchanged |
+| The rehearsal's no-op check expected an empty `uploaded-assets`; Hephaestus reports `null` | High (rehearsal always failed) | fixed |
+| A tag runs the `release.yml` of its own commit: whoever can push a `v*` tag elsewhere could drop the provenance job | Medium | documented: tag ruleset and a required reviewer on `release` (docs/release.md) |
+| The rehearsal and the release read the same secret name: a missing environment secret could fall back to a repository secret for the production tap | Medium-Low | fixed: `HOMEBREW_TAP_SANDBOX_TOKEN`; rehearsal environment limited to `main` (docs) |
+| The README's download steps went on after a failed checksum | Low | fixed: chained with `&&`; the attestation is part of it |
+| `verify-dist.sh` does not compare the manifest's artifact list | Low | open: only matters if the build job were compromised |
+
+Confirmed without change: every `${{ }}` reaching a shell goes through
+`env:`; the rehearsal version is checked before use; build jobs hold no
+secret and no write permission, without a module cache; every action is
+pinned to a commit and every checkout drops its credentials; CI runs on
+`pull_request` only, without inherited secrets; an RC tag never updates
+the tap (plan `tap=skip`, both tap steps gated, the workflow's guard, and
+`skip_upload: auto`); archives are byte-for-byte reproducible and the
+formula is identical on a second run with the same input.

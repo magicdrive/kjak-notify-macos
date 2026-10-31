@@ -28,12 +28,82 @@ thin adapter: it implements no notification code of its own.
 | checked on a real Mac | Intel (x86_64), macOS 15.7.9, terminal-notifier 3.1.0 (Homebrew, built from source), kjak v1.1.0, from a terminal of the logged-in user (2026-10-31): the plugin alone and through kjak, Japanese text and emoji, a two-line body; shown as from terminal-notifier |
 | not checked | Apple silicon, other macOS versions, terminals other than iTerm2 |
 
-## Quick start
+## Install
+
+Pick one way and keep to it. Every way installs the one executable
+`kjak-feather-notify-macos`, which kjak finds as plugin `notify-macos`.
+terminal-notifier is needed in every case.
+
+### GitHub Releases
+
+Each [release](https://github.com/magicdrive/kjak-notify-macos/releases)
+has `kjak-notify-macos_<version>_darwin_arm64.tar.gz` (Apple silicon),
+`..._darwin_amd64.tar.gz` (Intel) and `kjak-notify-macos_checksums.txt`.
+Each archive holds `kjak-feather-notify-macos`, `LICENSE` and `README.md`.
+
+```sh
+brew install terminal-notifier                 # 3.1.0
+v=0.1.0 arch=arm64                             # arch=amd64 on an Intel Mac
+base=https://github.com/magicdrive/kjak-notify-macos/releases/download/v$v
+curl -fLO "$base/kjak-notify-macos_${v}_darwin_${arch}.tar.gz" &&
+curl -fLO "$base/kjak-notify-macos_checksums.txt" &&
+shasum -a 256 -c --ignore-missing kjak-notify-macos_checksums.txt &&
+gh attestation verify "kjak-notify-macos_${v}_darwin_${arch}.tar.gz" --repo magicdrive/kjak-notify-macos &&
+tar -xzf "kjak-notify-macos_${v}_darwin_${arch}.tar.gz" kjak-feather-notify-macos &&
+install -d -m 755 ~/.local/bin &&
+install -m 755 kjak-feather-notify-macos ~/.local/bin/
+```
+
+The checksum file comes from the same release as the archive: it shows
+the download is intact. `gh attestation verify` shows that the archive
+was built by this repository's release workflow (skip it only without
+`gh`).
+
+`~/.local/bin` must be in `PATH` (or pin it with `path =`, below). An
+archive downloaded with a browser carries the quarantine mark and the
+executable is not notarized: `xattr -d com.apple.quarantine
+kjak-feather-notify-macos` before installing it; `curl` sets no mark.
+
+### Homebrew
+
+```sh
+brew install magicdrive/tap/kjak-notify-macos  # terminal-notifier comes with it
+```
+
+The formula `kjak-notify-macos` installs `kjak-feather-notify-macos` into
+`$(brew --prefix)/bin` (`/opt/homebrew` on Apple silicon, `/usr/local` on
+an Intel Mac) and depends on `terminal-notifier`, which homebrew-core has
+no bottle for: Homebrew builds it from source, with Xcode.
+
+> **Known issue (kjak v1.1.0).** kjak refuses a plugin in a directory under
+> one that its group can write to, and Homebrew's Cellar is such a
+> directory (mode 775, group admin): `kjak feather plugins` shows
+> notify-macos as `refused: ... the directory /usr/local/Cellar above it
+> is writable by group or others`. Until kjak accepts it, copy the plugin
+> to a directory of your own after each install or upgrade, and pin that
+> copy with `path =` (without it kjak also finds the refused one on `PATH`
+> and stops):
+>
+> ```sh
+> install -d -m 755 ~/.local/bin
+> install -m 755 "$(brew --prefix)/opt/kjak-notify-macos/bin/kjak-feather-notify-macos" ~/.local/bin/
+> ```
+>
+> Checked on an Intel Mac (`/usr/local`); on Apple silicon the Cellar is
+> made the same way by Homebrew's installer, but this was not checked on a
+> real Mac.
+
+### From source
 
 ```sh
 brew install terminal-notifier                 # 3.1.0
 make install                                   # ~/.local/bin/kjak-feather-notify-macos (Go 1.27)
-kjak feather plugins                           # lists notify-macos as ok (~/.local/bin must be in PATH)
+```
+
+## Quick start
+
+```sh
+kjak feather plugins                           # lists notify-macos as ok
 ```
 
 ```toml
@@ -41,9 +111,15 @@ kjak feather plugins                           # lists notify-macos as ok (~/.lo
 [feathers.mac]
 type = "external"
 plugin = "notify-macos"
-settings = { terminal_notifier = "/usr/local/bin/terminal-notifier" }   # /opt/homebrew/bin on Apple silicon
+# path = "/Users/you/.local/bin/kjak-feather-notify-macos"             # required with Homebrew (above)
+settings = { terminal_notifier = "/opt/homebrew/bin/terminal-notifier" } # /usr/local/bin on an Intel Mac
 timeout = "10s"
 ```
+
+Without `terminal_notifier`, the plugin uses the first
+`terminal-notifier` of kjak's `PATH`. It runs terminal-notifier only from
+Homebrew's Cellar (`/opt/homebrew` or `/usr/local`), `/Applications` or
+`~/Applications` (another prefix: `TERMINAL_NOTIFIER_APP_DIRS`).
 
 ```sh
 kjak config validate
@@ -86,7 +162,11 @@ application bundle with a shell script as its executable). `make
 integration` runs kjak v1.1.0: `KJAK_BIN=/path/to/kjak`, else it builds it
 (`go install github.com/magicdrive/kjak@v1.1.0`) into `build/` once.
 
-Documents: [plugin protocol v1](docs/design/plugin-protocol.md) ·
+Releases are made with Hephaestus from `hephaestus.yaml`
+([releasing](docs/release.md)): `make release-check snapshot`, and `make
+homebrew-e2e` for the formula with this Mac's Homebrew.
+
+Documents: [releasing](docs/release.md) · [plugin protocol v1](docs/design/plugin-protocol.md) ·
 [architecture](docs/design/architecture.md) ·
 [limitations](docs/design/limitations.md) · [audit](docs/audit.md)
 

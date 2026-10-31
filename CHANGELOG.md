@@ -1,0 +1,14 @@
+# Changelog
+
+## v0.1.0 (unreleased)
+
+First release. Experimental.
+
+- `kjak-feather-notify-macos`: kjak external feather plugin (protocol v1,
+  kjak v1.1.0) posting macOS notifications with terminal-notifier 3.1.0.
+- Released with Hephaestus v1.5.0: `darwin_amd64` and `darwin_arm64`
+  archives, `kjak-notify-macos_checksums.txt`, GitHub Release, and the
+  formula `kjak-notify-macos` on `magicdrive/tap` (depends on
+  terminal-notifier). Prereleases never update the tap.
+- Known issue: kjak v1.1.0 refuses the plugin where Homebrew installs it
+  (the Cellar is writable by group admin); see the README.

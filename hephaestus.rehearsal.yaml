@@ -1,0 +1,123 @@
+# Release rehearsal configuration (.github/workflows/release-rehearsal.yml).
+# Identical to hephaestus.yaml except (enforced by release_test.go):
+#   - release.github.draft: true      the release stays a draft: no tag is
+#                                     created and nothing becomes public;
+#   - brews[0].skip_upload: "false"   rehearsal versions are prereleases;
+#   - brews[0].repository.name        a sandbox tap, never the production one.
+version: 1
+
+project:
+  name: kjak-notify-macos
+  description: Experimental macOS notification plugin for kjak
+  homepage: https://github.com/magicdrive/kjak-notify-macos
+  license: MIT
+
+builds:
+  - id: kjak-feather-notify-macos
+    # macOS only: the plugin runs terminal-notifier, which exists only there.
+    matrix:
+      os: [darwin]
+      arch: [amd64, arm64]
+    command:
+      - go
+      - build
+      - -trimpath
+      - -ldflags
+      - "-s -w"
+      - -o
+      - "dist/bin/{{ .OS }}_{{ .Arch }}/kjak-feather-notify-macos"
+      - ./cmd/kjak-feather-notify-macos
+    env:
+      GOOS: "{{ .OS }}"
+      GOARCH: "{{ .Arch }}"
+      CGO_ENABLED: "0"
+    output: "dist/bin/{{ .OS }}_{{ .Arch }}/kjak-feather-notify-macos"
+
+archives:
+  - id: kjak-notify-macos
+    name: "{{ .Project }}_{{ .Version }}_{{ .OS }}_{{ .Arch }}"
+    format: tar.gz
+    files:
+      # kjak finds plugin notify-macos as kjak-feather-notify-macos on PATH.
+      - src: "dist/bin/{{ .OS }}_{{ .Arch }}/kjak-feather-notify-macos"
+        dst: kjak-feather-notify-macos
+        mode: "0755"
+      - LICENSE
+      - README.md
+
+checksum:
+  name: "{{ .Project }}_checksums.txt"
+
+release:
+  github:
+    owner: magicdrive
+    name: kjak-notify-macos
+    # The notes of the version being released; update it before tagging.
+    notes_file: RELEASE_NOTES.md
+    draft: true
+
+brews:
+  - name: kjak-notify-macos
+    ids: [kjak-notify-macos]
+    description: Experimental macOS notification plugin for kjak
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    # magicdrive/homebrew-tap keeps its formulae at the repository root;
+    # creating Formula/ there would hide them from Homebrew.
+    # Prereleases (v0.1.0-rc.1) never update the tap.
+    skip_upload: "false"
+    # os: mac puts it in on_macos: Hephaestus v1.5.0 writes a top-level
+    # depends_on before its own depends_on :macos, an order brew audit
+    # --strict refuses. The formula is macOS only, so it means the same.
+    dependencies:
+      - name: terminal-notifier
+        os: mac
+    install: |
+      bin.install "kjak-feather-notify-macos"
+    # Never posts a notification. The plugin finds and checks
+    # terminal-notifier before it looks at the body, so a request with an
+    # empty body proves that the dependency is found (named by the setting,
+    # and on PATH) and accepted as terminal-notifier, then stops. Its opt bin is
+    # under the Homebrew prefix: /opt/homebrew or /usr/local.
+    test: |
+      out = pipe_output(bin/"kjak-feather-notify-macos", '{"protocol_version":0}')
+      assert_match '"protocol_version":1', out
+      assert_match "unsupported protocol_version 0", out
+      tn = formula_opt_bin("terminal-notifier")/"terminal-notifier"
+      req = { protocol_version: 1, message: { body: "" }, settings: { terminal_notifier: tn.to_s } }
+      out = pipe_output(bin/"kjak-feather-notify-macos", JSON.generate(req))
+      assert_match "the message has no body to show", out
+      with_env(PATH: "#{tn.dirname}:/usr/bin:/bin") do
+        out = pipe_output(bin/"kjak-feather-notify-macos", '{"protocol_version":1,"message":{"body":""}}')
+      end
+      assert_match "the message has no body to show", out
+    # kjak v1.1.0 refuses the plugin where Homebrew installs it
+    # (scripts/homebrew-e2e.sh checks that this is still so).
+    caveats: |
+      kjak v1.1.0 refuses a plugin in a directory under one its group can
+      write to, and Homebrew's Cellar is one (mode 775, group admin):
+      `kjak feather plugins` shows this plugin as refused. Until kjak
+      accepts it, copy the plugin to a directory of your own, again after
+      each upgrade:
+        install -d -m 755 ~/.local/bin
+        install -m 755 "$(brew --prefix)/opt/kjak-notify-macos/bin/kjak-feather-notify-macos" ~/.local/bin/
+      and pin that copy in ~/.config/kjak/config.toml (an absolute path:
+      without it kjak also finds the refused one on PATH and stops):
+        [feathers.mac]
+        type = "external"
+        plugin = "notify-macos"
+        path = "/Users/YOU/.local/bin/kjak-feather-notify-macos"
+        settings = { terminal_notifier = "/opt/homebrew/bin/terminal-notifier" }
+      On an Intel Mac, terminal-notifier is /usr/local/bin/terminal-notifier.
+    repository:
+      owner: magicdrive
+      name: homebrew-tap-sandbox
+      pull_request:
+        enabled: true
+
+# Release safety checks before a tag is pushed: hephaestus preflight --tag vX.Y.Z
+# (docs/release.md).
+preflight:
+  branch: main
+  workflow: release.yml
+  environment: release
+  changelog: CHANGELOG.md

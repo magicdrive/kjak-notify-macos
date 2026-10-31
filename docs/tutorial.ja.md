@@ -53,6 +53,8 @@ make install                      # ビルドして ~/.local/bin/kjak-feather-no
 
 `make install PREFIX=/some/dir` とすると `/some/dir/bin` に入ります。そのディレクトリは絶対パスで `PATH` に含まれている必要があり、そのディレクトリとファイルはグループやほかの人が書き込めない状態でなければなりません。kjak は実行のたびにこれを確かめます。
 
+GitHub Releases のアーカイブや Homebrew の Formula（`brew install magicdrive/tap/kjak-notify-macos`）でも同じ実行ファイルが入ります。README の [Install](../README.md#install) と、Homebrew と kjak v1.1.0 の既知の問題を参照してください。
+
 ```sh
 kjak feather plugins              # notify-macos ... ok
 ```

@@ -1,0 +1,171 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  GOVULNCHECK_VERSION: v1.9.0
+  # Hephaestus for the release checks: the version release.yml pins
+  # (HEPHAESTUS_SHA there), built from its module for the jobs that need
+  # the binary itself (scripts/homebrew-e2e.sh).
+  HEPHAESTUS_VERSION: v1.5.0
+
+jobs:
+  lint:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: gofmt, go vet, staticcheck
+        run: make fmt-check vet staticcheck
+      - name: go mod tidy
+        run: go mod tidy -diff
+      - name: govulncheck
+        run: go run "golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION}" ./...
+
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: shellcheck
+        run: shellcheck scripts/*.sh .github/release/*.sh
+      # The release workflow's tag provenance check (release.yml, job
+      # provenance), against local repositories.
+      - name: Release tag provenance check
+        run: .github/release/verify-tag-provenance_test.sh
+
+  test:
+    # Apple silicon (macos-latest) and Intel (macos-15-intel). terminal-
+    # notifier is a stub: nothing is posted.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Unit tests
+        run: make test
+      - name: Race detector
+        run: make race
+      - name: Integration with kjak v1.1.0
+        run: make integration
+
+  release-config:
+    # The release configuration and the snapshot, as release.yml builds
+    # them: check both configurations, build, archive and checksum, verify
+    # dist, and the release plan of a stable and a prerelease tag.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Check hephaestus.yaml
+        uses: magicdrive/hephaestus@0f76752ad2a6598ba8fc6978eb90a790c71c4835 # v1.5.0
+        with:
+          command: check
+          github-token: ""
+      - name: Check hephaestus.rehearsal.yaml
+        uses: magicdrive/hephaestus@0f76752ad2a6598ba8fc6978eb90a790c71c4835 # v1.5.0
+        with:
+          command: check
+          config: hephaestus.rehearsal.yaml
+          github-token: ""
+      - name: Snapshot (build, archive, checksum)
+        uses: magicdrive/hephaestus@0f76752ad2a6598ba8fc6978eb90a790c71c4835 # v1.5.0
+        with:
+          command: run
+          stages: build,archive,checksum
+          snapshot: "true"
+          fresh: "true"
+          github-token: ""
+      - name: Verify dist
+        run: scripts/verify-dist.sh dist
+      - name: Release plan of v0.1.0
+        id: plan-stable
+        uses: magicdrive/hephaestus@0f76752ad2a6598ba8fc6978eb90a790c71c4835 # v1.5.0
+        with:
+          command: plan
+          tag: v0.1.0
+          github-token: ""
+      - name: Release plan of v0.1.0-rc.1
+        id: plan-rc
+        uses: magicdrive/hephaestus@0f76752ad2a6598ba8fc6978eb90a790c71c4835 # v1.5.0
+        with:
+          command: plan
+          tag: v0.1.0-rc.1
+          github-token: ""
+      - name: A release candidate never updates the tap
+        env:
+          STABLE: ${{ steps.plan-stable.outputs.prerelease }},${{ steps.plan-stable.outputs.tap }}
+          RC: ${{ steps.plan-rc.outputs.prerelease }},${{ steps.plan-rc.outputs.tap }}
+        run: |
+          echo "v0.1.0: $STABLE; v0.1.0-rc.1: $RC"
+          [[ "$STABLE" == "false,publish" && "$RC" == "true,skip" ]]
+
+  homebrew-e2e:
+    # The release formula with the real Homebrew on both prefixes:
+    # /opt/homebrew (macos-latest, Apple silicon) and /usr/local
+    # (macos-15-intel). terminal-notifier is installed as its dependency
+    # (built from source: homebrew-core has no bottle). Nothing is posted.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Hephaestus and kjak
+        run: |
+          GOBIN="$PWD/build" go install "github.com/magicdrive/hephaestus@${HEPHAESTUS_VERSION}"
+          make kjak
+      - name: Homebrew directories
+        run: ls -ld "$(brew --prefix)" "$(brew --prefix)/bin" "$(brew --prefix)/Cellar" "$(brew --prefix)/opt"
+      - name: Formula → brew audit/style/install/test → kjak
+        env:
+          HEPHAESTUS: ${{ github.workspace }}/build/hephaestus
+        run: scripts/homebrew-e2e.sh
+
+  ci-gate:
+    # The single required check, and what the release workflow waits for.
+    if: always()
+    needs: [lint, shell, test, release-config, homebrew-e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "$RESULTS"
+          for r in $RESULTS; do [[ "$r" == success ]] || exit 1; done

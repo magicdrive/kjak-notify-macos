@@ -64,6 +64,11 @@ make install                      # builds, installs ~/.local/bin/kjak-feather-n
 must be in your `PATH` as an absolute path, and neither it nor the file may
 be writable by group or others: kjak checks it before every run.
 
+The archives of the GitHub Releases and the Homebrew formula
+(`brew install magicdrive/tap/kjak-notify-macos`) install the same
+executable: see [Install](../README.md#install) in the README, and its
+known issue with Homebrew and kjak v1.1.0.
+
 ```sh
 kjak feather plugins              # notify-macos ... ok
 ```
