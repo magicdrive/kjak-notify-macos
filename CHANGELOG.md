@@ -11,4 +11,4 @@ First release. Experimental.
   formula `kjak-notify-macos` on `magicdrive/tap` (depends on
   terminal-notifier). Prereleases never update the tap.
 - Known issue: kjak v1.1.0 refuses the plugin where Homebrew installs it
-  (the Cellar is writable by group admin); see the README.
+  (its bin and Cellar are writable by group admin); see the README.

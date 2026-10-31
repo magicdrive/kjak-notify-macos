@@ -109,7 +109,7 @@ configurations and scripts followed.
 
 | finding | severity | status |
 |---|---|---|
-| kjak v1.1.0 refuses the plugin installed by Homebrew: `/usr/local/Cellar` is mode 775, group admin, and kjak allows a group-writable directory above a plugin only when it is sticky. Reproduced with the real formula (`scripts/homebrew-e2e.sh`). Not checked on Apple silicon (`/opt/homebrew`). | High (Homebrew users) | open: needs kjak; caveats and README give the workaround (a copy pinned with `path =`), checked with `kjak send --dry-run` |
+| kjak v1.1.0 refuses the plugin installed by Homebrew: `<prefix>/bin`, `Cellar` and `opt` are mode 775, group admin; kjak refuses a group-writable directory holding a plugin, and one above it unless sticky. Reproduced with the real formula (`scripts/homebrew-e2e.sh`) on this Mac (Cellar) and on GitHub's runners, `/opt/homebrew` and `/usr/local` (bin). Not checked on a real Apple silicon Mac. | High (Homebrew users) | open: needs kjak; caveats and README give the workaround (a copy pinned with `path =`), checked with `kjak send --dry-run` |
 | Hephaestus v1.5.0 writes a top-level `depends_on "x"` before its own `depends_on :macos`; `brew audit --strict` refuses that order | Medium | worked around: the dependency is declared `os: mac` (inside `on_macos`); Hephaestus unchanged |
 | The rehearsal's no-op check expected an empty `uploaded-assets`; Hephaestus reports `null` | High (rehearsal always failed) | fixed |
 | A tag runs the `release.yml` of its own commit: whoever can push a `v*` tag elsewhere could drop the provenance job | Medium | documented: tag ruleset and a required reviewer on `release` (docs/release.md) |

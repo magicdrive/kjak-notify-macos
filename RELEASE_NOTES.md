@@ -10,8 +10,8 @@ shows a kjak message as a macOS notification by running
   build provenance attestation.
 - Homebrew: `brew install magicdrive/tap/kjak-notify-macos` (installs
   terminal-notifier as its dependency, built from source).
-- **Known issue with Homebrew:** kjak v1.1.0 refuses a plugin under
-  Homebrew's Cellar, which its group (admin) can write to. Copy the plugin
+- **Known issue with Homebrew:** kjak v1.1.0 refuses a plugin in or under
+  Homebrew's `bin` and Cellar, which its group (admin) can write to. Copy the plugin
   to a directory of your own and pin it with `path =` (the formula's
   caveats and the README show how), or install from the archive.
 - Checked on a real Mac: Intel, macOS 15.7.9. **Not checked on an Apple

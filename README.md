@@ -75,11 +75,12 @@ The formula `kjak-notify-macos` installs `kjak-feather-notify-macos` into
 an Intel Mac) and depends on `terminal-notifier`, which homebrew-core has
 no bottle for: Homebrew builds it from source, with Xcode.
 
-> **Known issue (kjak v1.1.0).** kjak refuses a plugin in a directory under
-> one that its group can write to, and Homebrew's Cellar is such a
-> directory (mode 775, group admin): `kjak feather plugins` shows
-> notify-macos as `refused: ... the directory /usr/local/Cellar above it
-> is writable by group or others`. Until kjak accepts it, copy the plugin
+> **Known issue (kjak v1.1.0).** kjak refuses a plugin in or under a
+> directory that its group can write to, and Homebrew's `bin` and `Cellar`
+> are such directories (mode 775, group admin): `kjak feather plugins`
+> shows notify-macos as `refused: ... its directory /opt/homebrew/bin is
+> writable by group or others` (where `bin` is 755, as on some older
+> installs, the Cellar is named instead). Until kjak accepts it, copy the plugin
 > to a directory of your own after each install or upgrade, and pin that
 > copy with `path =` (without it kjak also finds the refused one on `PATH`
 > and stops):
@@ -89,9 +90,9 @@ no bottle for: Homebrew builds it from source, with Xcode.
 > install -m 755 "$(brew --prefix)/opt/kjak-notify-macos/bin/kjak-feather-notify-macos" ~/.local/bin/
 > ```
 >
-> Checked on an Intel Mac (`/usr/local`); on Apple silicon the Cellar is
-> made the same way by Homebrew's installer, but this was not checked on a
-> real Mac.
+> Checked on an Intel Mac (`/usr/local`) and on GitHub's Apple silicon
+> and Intel runners (`/opt/homebrew`, `/usr/local`); not on a real Apple
+> silicon Mac.
 
 ### From source
 

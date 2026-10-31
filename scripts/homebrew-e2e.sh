@@ -119,8 +119,10 @@ out="$(env -i HOME="$home" PATH="$prefix/bin:/usr/bin:/bin" "$kjak" feather plug
 echo "$out"
 if grep -q '^notify-macos .* ok ' <<<"$out"; then
   echo "kjak accepts the plugin in the Cellar: update the caveats and README"
-elif grep -q 'Cellar above it is writable by group or others' <<<"$out"; then
-  echo "known: kjak v1.1.0 refuses it (Homebrew's Cellar is writable by group admin)"
+elif grep -Eq "(its directory $prefix/bin|the directory $prefix/Cellar above it) is writable by group or others" <<<"$out"; then
+  # bin is checked first: 775 on a standard install (/opt/homebrew, GitHub's
+  # runners), 755 on some older ones, where the Cellar is reported instead
+  echo "known: kjak v1.1.0 refuses it (Homebrew's bin or Cellar is writable by group admin)"
 else
   fail "unexpected kjak feather plugins output"
 fi

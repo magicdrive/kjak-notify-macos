@@ -91,8 +91,8 @@ brews:
     # kjak v1.1.0 refuses the plugin where Homebrew installs it
     # (scripts/homebrew-e2e.sh checks that this is still so).
     caveats: |
-      kjak v1.1.0 refuses a plugin in a directory under one its group can
-      write to, and Homebrew's Cellar is one (mode 775, group admin):
+      kjak v1.1.0 refuses a plugin in or under a directory its group can
+      write to, and Homebrew's bin and Cellar are (mode 775, group admin):
       `kjak feather plugins` shows this plugin as refused. Until kjak
       accepts it, copy the plugin to a directory of your own, again after
       each upgrade:
