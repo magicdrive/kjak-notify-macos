@@ -89,9 +89,19 @@ shasum -a 256 "$(brew --prefix)/opt/kjak-notify-macos/bin/kjak-feather-notify-ma
 Put it in the feather as `sha256 = "..."` (Quick start, below), and update
 it after each `brew upgrade kjak-notify-macos`: until then kjak refuses the
 new version. A project's feather is pinned by `kjak config trust` instead.
-Checked on an Intel Mac (`/usr/local`) and, by CI, on GitHub's Apple
-silicon and Intel runners (`/opt/homebrew`, `/usr/local`); not on a real
-Apple silicon Mac.
+
+The pin covers `kjak-feather-notify-macos` only. terminal-notifier is run
+from Homebrew's Cellar, which the admin group can also write to: the
+plugin checks that it is terminal-notifier's application, owned by you or
+root, in a directory only you, root or admin can change
+([architecture](docs/design/architecture.md)), but another admin user of
+the Mac could still replace it.
+
+This procedure was checked with kjak v1.2.0 by `scripts/homebrew-e2e.sh`
+(the real formula, nothing posted) on an Intel Mac (`/usr/local`) and on
+GitHub's Apple silicon and Intel runners (`/opt/homebrew`, `/usr/local`).
+A notification shown on screen was checked only with kjak v1.1.0 and the
+plugin built from source; not on an Apple silicon Mac.
 
 ### From source
 
@@ -103,7 +113,7 @@ make install                                   # ~/.local/bin/kjak-feather-notif
 ## Quick start
 
 ```sh
-kjak feather plugins                           # lists notify-macos as ok
+kjak feather plugins                           # notify-macos: ok, or (Homebrew) the sha256 to pin
 ```
 
 ```toml

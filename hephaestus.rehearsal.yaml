@@ -105,7 +105,8 @@ brews:
         settings = { terminal_notifier = "/opt/homebrew/bin/terminal-notifier" }
       Update sha256 after each `brew upgrade kjak-notify-macos`. On an Intel
       Mac, terminal-notifier is /usr/local/bin/terminal-notifier. kjak v1.1.0
-      refuses a plugin installed by Homebrew.
+      refuses a plugin installed by Homebrew. The pin covers this plugin
+      only, not terminal-notifier (also in Homebrew's Cellar).
     repository:
       owner: magicdrive
       name: homebrew-tap-sandbox

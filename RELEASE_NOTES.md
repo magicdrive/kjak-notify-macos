@@ -15,9 +15,13 @@ shows a kjak message as a macOS notification by running
   so kjak runs a plugin there only when the feather's `sha256` is the
   file's (`kjak feather plugins` shows it; update it after each `brew
   upgrade`). kjak v1.1.0 refuses it; the archive works with both.
-- Checked on a real Mac: Intel, macOS 15.7.9. **Not checked on an Apple
-  silicon Mac** (the release's CI runs the tests and the Homebrew install
-  on GitHub's Apple silicon runners).
+- Checked on a real Mac (a notification shown): Intel, macOS 15.7.9, kjak
+  v1.1.0, the plugin built from source. The Homebrew formula with kjak
+  v1.2.0 and the SHA-256 pin was checked without posting anything, on that
+  Mac and on GitHub's Apple silicon and Intel runners. **Not checked on an
+  Apple silicon Mac.**
+- The SHA-256 pin covers the plugin only; terminal-notifier is trusted in
+  Homebrew's Cellar, which other admin users of the Mac can write to.
 - `delivered` means that macOS accepted the notification; its display is
   not guaranteed (Focus, notification settings).
 
