@@ -22,7 +22,7 @@ name kjak looks for (`kjak-feather-<plugin>`, plugin `notify-macos`).
 
 - [ci.yml](../.github/workflows/ci.yml): lint (gofmt, vet, staticcheck,
   `go mod tidy`, govulncheck), shellcheck and the tag provenance tests, unit
-  and race tests and the integration with kjak v1.1.0 on Apple silicon and
+  and race tests and the integration with kjak v1.2.0 and v1.1.0 on Apple silicon and
   Intel runners, the Hephaestus configurations, a snapshot with
   [scripts/verify-dist.sh](../scripts/verify-dist.sh) and the release plan
   of `v0.1.0` and `v0.1.0-rc.1`, and

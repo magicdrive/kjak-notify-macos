@@ -88,24 +88,22 @@ brews:
         out = pipe_output(bin/"kjak-feather-notify-macos", '{"protocol_version":1,"message":{"body":""}}')
       end
       assert_match "the message has no body to show", out
-    # kjak v1.1.0 refuses the plugin where Homebrew installs it
-    # (scripts/homebrew-e2e.sh checks that this is still so).
+    # Homebrew's bin, Cellar and opt are writable by group admin: kjak
+    # v1.2.0 runs a plugin there only with its SHA-256 pinned
+    # (scripts/homebrew-e2e.sh checks it).
     caveats: |
-      kjak v1.1.0 refuses a plugin in or under a directory its group can
-      write to, and Homebrew's bin and Cellar are (mode 775, group admin):
-      `kjak feather plugins` shows this plugin as refused. Until kjak
-      accepts it, copy the plugin to a directory of your own, again after
-      each upgrade:
-        install -d -m 755 ~/.local/bin
-        install -m 755 "$(brew --prefix)/opt/kjak-notify-macos/bin/kjak-feather-notify-macos" ~/.local/bin/
-      and pin that copy in ~/.config/kjak/config.toml (an absolute path:
-      without it kjak also finds the refused one on PATH and stops):
+      kjak (v1.2.0 or later) runs this plugin only with its SHA-256 pinned:
+      Homebrew's bin and Cellar can be written by the admin group, so kjak
+      does not trust the place alone. `kjak feather plugins` shows the value
+      to pin. In ~/.config/kjak/config.toml:
         [feathers.mac]
         type = "external"
         plugin = "notify-macos"
-        path = "/Users/YOU/.local/bin/kjak-feather-notify-macos"
+        sha256 = "<the sha256 kjak feather plugins shows>"
         settings = { terminal_notifier = "/opt/homebrew/bin/terminal-notifier" }
-      On an Intel Mac, terminal-notifier is /usr/local/bin/terminal-notifier.
+      Update sha256 after each `brew upgrade kjak-notify-macos`. On an Intel
+      Mac, terminal-notifier is /usr/local/bin/terminal-notifier. kjak v1.1.0
+      refuses a plugin installed by Homebrew.
     repository:
       owner: magicdrive
       name: homebrew-tap

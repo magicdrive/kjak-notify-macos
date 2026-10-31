@@ -70,8 +70,10 @@ jobs:
         run: make test
       - name: Race detector
         run: make race
-      - name: Integration with kjak v1.1.0
+      - name: Integration with kjak v1.2.0
         run: make integration
+      - name: Integration with kjak v1.1.0 (protocol v1 compatibility)
+        run: make integration-compat
 
   release-config:
     # The release configuration and the snapshot, as release.yml builds
@@ -153,9 +155,7 @@ jobs:
       - name: Homebrew directories
         run: ls -ld "$(brew --prefix)" "$(brew --prefix)/bin" "$(brew --prefix)/Cellar" "$(brew --prefix)/opt"
       - name: Formula → brew audit/style/install/test → kjak
-        env:
-          HEPHAESTUS: ${{ github.workspace }}/build/hephaestus
-        run: scripts/homebrew-e2e.sh
+        run: make homebrew-e2e HEPHAESTUS="$PWD/build/hephaestus"
 
   ci-gate:
     # The single required check, and what the release workflow waits for.

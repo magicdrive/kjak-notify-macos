@@ -16,13 +16,13 @@
 
 | | |
 |---|---|
-| 対応 | macOS（ログイン中の GUI セッション）、kjak v1.1.0、terminal-notifier 3.1.0 |
+| 対応 | macOS（ログイン中の GUI セッション）、kjak v1.1.0 以降（Homebrew の Formula で入れた場合は v1.2.0 以降）、terminal-notifier 3.1.0 |
 | 実機で確認済み | Intel（x86_64）、macOS 15.7.9、terminal-notifier 3.1.0、kjak v1.1.0。ログイン中のユーザーの端末から、9 章と 10 章の手順（terminal-notifier からの通知として表示） |
 | 未確認 | Apple silicon、ほかの macOS のバージョン、ほかの端末アプリ、SSH、launchd |
 
 ## 4. 必要なもの
 
-- kjak v1.1.0（`kjak --version`）
+- kjak v1.1.0 以降（`kjak --version`）。Homebrew で入れたプラグインを動かすには v1.2.0 以降
 - terminal-notifier 3.1.0（`terminal-notifier -version`）
 - Go 1.27（プラグインのビルドに使います。`go version`）
 
@@ -53,7 +53,7 @@ make install                      # ビルドして ~/.local/bin/kjak-feather-no
 
 `make install PREFIX=/some/dir` とすると `/some/dir/bin` に入ります。そのディレクトリは絶対パスで `PATH` に含まれている必要があり、そのディレクトリとファイルはグループやほかの人が書き込めない状態でなければなりません。kjak は実行のたびにこれを確かめます。
 
-GitHub Releases のアーカイブや Homebrew の Formula（`brew install magicdrive/tap/kjak-notify-macos`）でも同じ実行ファイルが入ります。README の [Install](../README.md#install) と、Homebrew と kjak v1.1.0 の既知の問題を参照してください。
+GitHub Releases のアーカイブや Homebrew の Formula（`brew install magicdrive/tap/kjak-notify-macos`）でも同じ実行ファイルが入ります。README の [Install](../README.md#install) を参照してください。Homebrew で入れた場合は、kjak v1.2.0 以降で、SHA-256 をピン留めすると動きます（feather に `sha256 = "..."`。値は `kjak feather plugins` が表示します）。
 
 ```sh
 kjak feather plugins              # notify-macos ... ok

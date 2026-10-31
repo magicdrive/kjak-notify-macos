@@ -5,17 +5,21 @@ GO      ?= go
 BIN     := kjak-feather-notify-macos
 PREFIX  ?= $(HOME)/.local
 BINDIR  ?= $(PREFIX)/bin
-# kjak for the integration tests (make integration): v1.1.0, built into
-# build/ unless KJAK_BIN names an existing one
-KJAK_VERSION ?= v1.1.0
-KJAK_BIN     ?= $(CURDIR)/build/kjak
+# kjak for the integration tests (make integration): v1.2.0, built into
+# build/ unless KJAK_BIN names an existing one; make integration-compat runs
+# them with the oldest kjak the plugin supports (v1.1.0, protocol v1)
+# (named by version: a binary of another version is never taken for it)
+KJAK_VERSION ?= v1.2.0
+KJAK_BIN     ?= $(CURDIR)/build/kjak-$(KJAK_VERSION)
+KJAK_COMPAT_VERSION ?= v1.1.0
+KJAK_COMPAT_BIN     ?= $(CURDIR)/build/kjak-$(KJAK_COMPAT_VERSION)
 FUZZTIME     ?= 30s
 # Hephaestus for the release targets (release.yml pins v1.5.0)
 HEPHAESTUS   ?= hephaestus
 # staticcheck pinned as in kjak (2026.2.2, verified with Go 1.27.3)
 STATICCHECK  := honnef.co/go/tools/cmd/staticcheck@v0.8.2
 
-.PHONY: all build test race vet staticcheck fmt-check kjak integration fuzz check install uninstall clean \
+.PHONY: all build test race vet staticcheck fmt-check kjak integration integration-compat fuzz check install uninstall clean \
 	release-check snapshot homebrew-e2e
 
 all: check build
@@ -41,17 +45,25 @@ fmt-check:
 
 # kjak $(KJAK_VERSION) runs the plugin (stub terminal-notifier): nothing is posted
 $(KJAK_BIN):
-	GOBIN=$(abspath $(dir $(KJAK_BIN))) $(GO) install github.com/magicdrive/kjak@$(KJAK_VERSION)
+	@d=$$(mktemp -d) && GOBIN=$$d $(GO) install github.com/magicdrive/kjak@$(KJAK_VERSION) && \
+		install -d $(dir $(KJAK_BIN)) && mv $$d/kjak $(KJAK_BIN) && rmdir $$d
 
 kjak: $(KJAK_BIN)
 
 integration: $(KJAK_BIN)
 	KJAK_BIN=$(KJAK_BIN) $(GO) test -count=1 -v ./tests/
 
+$(KJAK_COMPAT_BIN):
+	@d=$$(mktemp -d) && GOBIN=$$d $(GO) install github.com/magicdrive/kjak@$(KJAK_COMPAT_VERSION) && \
+		install -d $(dir $(KJAK_COMPAT_BIN)) && mv $$d/kjak $(KJAK_COMPAT_BIN) && rmdir $$d
+
+integration-compat: $(KJAK_COMPAT_BIN)
+	KJAK_BIN=$(KJAK_COMPAT_BIN) $(GO) test -count=1 -v ./tests/
+
 fuzz:
 	$(GO) test -run '^$$' -fuzz '^FuzzArgs$$' -fuzztime $(FUZZTIME) ./internal/plugin/
 
-check: fmt-check vet staticcheck test race integration
+check: fmt-check vet staticcheck test race integration integration-compat
 
 # into $(BINDIR) (an absolute directory of PATH; not writable by group or
 # others, as kjak requires)

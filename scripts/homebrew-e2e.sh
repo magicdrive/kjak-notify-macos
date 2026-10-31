@@ -12,9 +12,10 @@
 #     and on PATH, under `brew --prefix` (/usr/local or /opt/homebrew),
 #     without posting a notification (an empty body stops it after the
 #     check);
-#   - kjak (KJAK_BIN, v1.1.0) and the plugin installed by Homebrew: what
-#     `kjak feather plugins` says of it, and kjak with the copy the caveats
-#     describe (config validate, send --dry-run: nothing is posted).
+#   - kjak (KJAK_BIN, v1.2.0) and the plugin installed by Homebrew: shown
+#     with the SHA-256 to pin; refused without a pin and with a wrong one;
+#     run with the pin (by bin and by opt) and through a project's trust,
+#     refused before it. Nothing is posted.
 #
 # It installs into the machine's Homebrew prefix and removes the formula, the
 # tap and its trust on exit; terminal-notifier stays installed if it was.
@@ -23,7 +24,7 @@ export LC_ALL=C
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 heph="${HEPHAESTUS:-hephaestus}"
-kjak="${KJAK_BIN:-$repo/build/kjak}"
+kjak="${KJAK_BIN:-$repo/build/kjak-v1.2.0}"
 tag="${TAG:-v0.1.0}"
 version="${tag#v}"
 formula="kjak-notify-macos"
@@ -113,35 +114,49 @@ for how in setting path; do
   [[ "$out" == *'the message has no body to show'* ]] || fail "terminal-notifier by $how"
 done
 
-step "kjak and the plugin installed by Homebrew"
-home="$work/home"; mkdir -p "$home/.config/kjak" "$home/bin"; chmod 700 "$home"
-out="$(env -i HOME="$home" PATH="$prefix/bin:/usr/bin:/bin" "$kjak" feather plugins)"
-echo "$out"
-if grep -q '^notify-macos .* ok ' <<<"$out"; then
-  echo "kjak accepts the plugin in the Cellar: update the caveats and README"
-elif grep -Eq "(its directory $prefix/bin|the directory $prefix/Cellar above it) is writable by group or others" <<<"$out"; then
-  # bin is checked first: 775 on a standard install (/opt/homebrew, GitHub's
-  # runners), 755 on some older ones, where the Cellar is reported instead
-  echo "known: kjak v1.1.0 refuses it (Homebrew's bin or Cellar is writable by group admin)"
-else
-  fail "unexpected kjak feather plugins output"
-fi
+step "kjak and the plugin installed by Homebrew (nothing is posted)"
+# kjak v1.2.0 runs a plugin in Homebrew's admin-writable directories only
+# when its SHA-256 is pinned (or recorded by a project's trust). Every run
+# below either stops before the plugin (refused, --dry-run) or gives it a
+# terminal_notifier that does not exist: it answers rejected, nothing runs.
+home="$work/home"; mkdir -p "$home/.config/kjak" "$home/proj"; chmod 700 "$home"
+sum="$(shasum -a 256 "$keg/bin/$exe" | cut -d' ' -f1)"
+missing=/nonexistent/terminal-notifier
+run_kjak() { (cd "$home/proj" && env -i HOME="$home" PATH="$prefix/bin:/usr/bin:/bin" "$kjak" "$@"); }
+config() { # extra lines of the feather, terminal_notifier
+  printf '[feathers.mac]\ntype = "external"\nplugin = "notify-macos"\n%bsettings = { terminal_notifier = "%s" }\ntimeout = "10s"\n' "$1" "$2" \
+    > "$home/.config/kjak/config.toml"
+}
+expect() { # substring, command...: prints the output, fails without the substring
+  local want="$1" out; shift
+  out="$("$@" 2>&1)" || true
+  echo "$out"
+  grep -qF -- "$want" <<<"$out" || fail "want: $want"
+}
+config "" "$prefix/bin/terminal-notifier"
+expect "Homebrew: runs only for a feather with sha256 = \"$sum\"" run_kjak feather plugins
+grep -q 'refused' <<<"$(run_kjak feather plugins)" && fail "the plugin is reported as refused"
 
-step "kjak with the pinned copy the caveats describe (send --dry-run: nothing is posted)"
-install -m 755 "$prefix/opt/$formula/bin/$exe" "$home/bin/"
-cat > "$home/.config/kjak/config.toml" <<EOF
-[feathers.mac]
-type = "external"
-plugin = "notify-macos"
-path = "$home/bin/$exe"
-settings = { terminal_notifier = "$prefix/bin/terminal-notifier" }
-timeout = "10s"
-EOF
-run_kjak() { env -i HOME="$home" PATH="$home/bin:$prefix/bin:/usr/bin:/bin" "$kjak" "$@"; }
-run_kjak feather plugins | tee "$work/plugins.txt"
-grep -q "^notify-macos  $home/bin/$exe  *ok " "$work/plugins.txt" || fail "kjak refuses the copy"
+step "refused: no pin, a wrong pin"
+expect "it runs only with its SHA-256 pinned: sha256 = \"$sum\"" run_kjak send --to mac --dry-run "homebrew e2e"
+config "sha256 = \"$(printf '0%.0s' {1..64})\"\n" "$prefix/bin/terminal-notifier"
+expect "not the pinned 0000" run_kjak send --to mac --dry-run "homebrew e2e"
+
+step "pinned: config validate, send --dry-run, a run of the plugin"
+config "sha256 = \"$sum\"\n" "$prefix/bin/terminal-notifier"
 run_kjak config validate
-run_kjak send --to mac --dry-run "homebrew e2e"
+expect "nothing was sent" run_kjak send --to mac --dry-run "homebrew e2e"
+config "sha256 = \"$sum\"\n" "$missing"
+expect "plugin: cannot check /nonexistent" run_kjak send --to mac "homebrew e2e"
+config "path = \"$prefix/opt/$formula/bin/$exe\"\nsha256 = \"$sum\"\n" "$missing"
+expect "plugin: cannot check /nonexistent" run_kjak send --to mac "homebrew e2e (opt)"
+
+step "a project: refused until trusted, then run"
+config "" "$prefix/bin/terminal-notifier"
+printf '[feathers.pmac]\ntype = "external"\nplugin = "notify-macos"\nsettings = { terminal_notifier = "%s" }\n' "$missing" > "$home/proj/.kjak.toml"
+expect "is not trusted" run_kjak send --to pmac "homebrew e2e"
+expect "installed by Homebrew, in directories the admin group can write to: only this SHA-256 will run" run_kjak config trust --yes
+expect "plugin: cannot check /nonexistent" run_kjak send --to pmac "homebrew e2e (project)"
 
 step "brew uninstall"
 brew uninstall "$tap/$formula"

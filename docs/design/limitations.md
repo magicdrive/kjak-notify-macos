@@ -25,7 +25,7 @@ without an Apple entitlement.
 | | |
 |---|---|
 | operating system | macOS only; elsewhere every send is `rejected` |
-| supported | macOS with terminal-notifier 3.1.0 in a logged-in GUI session, kjak v1.1.0 (plugin protocol v1) |
+| supported | macOS with terminal-notifier 3.1.0 in a logged-in GUI session, kjak v1.1.0 or later (plugin protocol v1); installed by Homebrew, kjak v1.2.0 or later with the plugin's SHA-256 pinned |
 | checked on a real Mac | Intel (x86_64), macOS 15.7.9, terminal-notifier 3.1.0 (Homebrew, built from source), kjak v1.1.0, from a terminal of the logged-in user (owner, 2026-10-31): the plugin alone, through kjak, Japanese text and emoji, a two-line body with the URL; no process left; shown as from terminal-notifier |
 | not checked | Apple silicon, other macOS versions, other terminals, Terminal.app, launchd jobs, SSH sessions |
 

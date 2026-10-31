@@ -21,13 +21,13 @@ and terminal-notifier posts it to the macOS notification center.
 
 | | |
 |---|---|
-| supported | macOS, in a logged-in GUI session; kjak v1.1.0; terminal-notifier 3.1.0 |
+| supported | macOS, in a logged-in GUI session; kjak v1.1.0 or later (v1.2.0 or later with the Homebrew formula); terminal-notifier 3.1.0 |
 | checked on a real Mac | Intel (x86_64), macOS 15.7.9, terminal-notifier 3.1.0, kjak v1.1.0, from a terminal of the logged-in user: the steps of section 9 and 10 (shown as from terminal-notifier) |
 | not checked | Apple silicon, other macOS versions, other terminals, SSH, launchd |
 
 ## 4. Dependencies
 
-- kjak v1.1.0 (`kjak --version`)
+- kjak v1.1.0 or later (`kjak --version`); v1.2.0 or later to run the plugin installed by Homebrew
 - terminal-notifier 3.1.0 (`terminal-notifier -version`)
 - Go 1.27, to build the plugin (`go version`)
 
@@ -66,8 +66,9 @@ be writable by group or others: kjak checks it before every run.
 
 The archives of the GitHub Releases and the Homebrew formula
 (`brew install magicdrive/tap/kjak-notify-macos`) install the same
-executable: see [Install](../README.md#install) in the README, and its
-known issue with Homebrew and kjak v1.1.0.
+executable: see [Install](../README.md#install) in the README. Installed by
+Homebrew, it runs under kjak v1.2.0 or later with its SHA-256 pinned
+(`sha256 = "..."` in the feather, the value `kjak feather plugins` shows).
 
 ```sh
 kjak feather plugins              # notify-macos ... ok

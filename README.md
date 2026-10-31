@@ -12,7 +12,8 @@ thin adapter: it implements no notification code of its own.
 
 > **Experimental.**
 > - macOS only.
-> - Speaks kjak's plugin protocol v1 (kjak v1.1.0).
+> - Speaks kjak's plugin protocol v1 (kjak v1.1.0 and later; installed
+>   with Homebrew, kjak v1.2.0 and later).
 > - Depends on terminal-notifier (3.1.0), installed separately.
 > - Not a built-in kjak feather: an independent project with its own
 >   releases. kjak itself still has no OS notification feather.
@@ -24,7 +25,7 @@ thin adapter: it implements no notification code of its own.
 
 | | |
 |---|---|
-| supported | macOS, kjak v1.1.0 (plugin protocol v1), terminal-notifier 3.1.0, a logged-in GUI session |
+| supported | macOS, kjak v1.1.0 or later (plugin protocol v1; v1.2.0 or later for the Homebrew formula), terminal-notifier 3.1.0, a logged-in GUI session |
 | checked on a real Mac | Intel (x86_64), macOS 15.7.9, terminal-notifier 3.1.0 (Homebrew, built from source), kjak v1.1.0, from a terminal of the logged-in user (2026-10-31): the plugin alone and through kjak, Japanese text and emoji, a two-line body; shown as from terminal-notifier |
 | not checked | Apple silicon, other macOS versions, terminals other than iTerm2 |
 
@@ -75,24 +76,22 @@ The formula `kjak-notify-macos` installs `kjak-feather-notify-macos` into
 an Intel Mac) and depends on `terminal-notifier`, which homebrew-core has
 no bottle for: Homebrew builds it from source, with Xcode.
 
-> **Known issue (kjak v1.1.0).** kjak refuses a plugin in or under a
-> directory that its group can write to, and Homebrew's `bin` and `Cellar`
-> are such directories (mode 775, group admin): `kjak feather plugins`
-> shows notify-macos as `refused: ... its directory /opt/homebrew/bin is
-> writable by group or others` (where `bin` is 755, as on some older
-> installs, the Cellar is named instead). Until kjak accepts it, copy the plugin
-> to a directory of your own after each install or upgrade, and pin that
-> copy with `path =` (without it kjak also finds the refused one on `PATH`
-> and stops):
->
-> ```sh
-> install -d -m 755 ~/.local/bin
-> install -m 755 "$(brew --prefix)/opt/kjak-notify-macos/bin/kjak-feather-notify-macos" ~/.local/bin/
-> ```
->
-> Checked on an Intel Mac (`/usr/local`) and on GitHub's Apple silicon
-> and Intel runners (`/opt/homebrew`, `/usr/local`); not on a real Apple
-> silicon Mac.
+Homebrew's `bin`, `Cellar` and `opt` can be written by the `admin` group,
+so **kjak v1.2.0 or later** runs the plugin from there only with its
+SHA-256 pinned ([kjak's security notes](https://github.com/magicdrive/kjak/blob/v1.2.0/docs/security.md#external-plugins);
+kjak v1.1.0 refuses it). `kjak feather plugins` shows the value:
+
+```sh
+kjak feather plugins     # notify-macos ... Homebrew: runs only for a feather with sha256 = "..."
+shasum -a 256 "$(brew --prefix)/opt/kjak-notify-macos/bin/kjak-feather-notify-macos"   # the same value
+```
+
+Put it in the feather as `sha256 = "..."` (Quick start, below), and update
+it after each `brew upgrade kjak-notify-macos`: until then kjak refuses the
+new version. A project's feather is pinned by `kjak config trust` instead.
+Checked on an Intel Mac (`/usr/local`) and, by CI, on GitHub's Apple
+silicon and Intel runners (`/opt/homebrew`, `/usr/local`); not on a real
+Apple silicon Mac.
 
 ### From source
 
@@ -112,7 +111,7 @@ kjak feather plugins                           # lists notify-macos as ok
 [feathers.mac]
 type = "external"
 plugin = "notify-macos"
-# path = "/Users/you/.local/bin/kjak-feather-notify-macos"             # required with Homebrew (above)
+# sha256 = "..."                                                      # required with Homebrew (above)
 settings = { terminal_notifier = "/opt/homebrew/bin/terminal-notifier" } # /usr/local/bin on an Intel Mac
 timeout = "10s"
 ```
@@ -154,14 +153,15 @@ Homebrew's wrapper script; never another program a setting names
 ## Development
 
 ```sh
-make check          # gofmt, go vet, staticcheck, unit tests, race, integration with kjak v1.1.0
+make check          # gofmt, go vet, staticcheck, unit tests, race, integration with kjak v1.2.0 and v1.1.0
 make fuzz           # FuzzArgs
 ```
 
 The tests never post a notification: terminal-notifier is a stub (an
 application bundle with a shell script as its executable). `make
-integration` runs kjak v1.1.0: `KJAK_BIN=/path/to/kjak`, else it builds it
-(`go install github.com/magicdrive/kjak@v1.1.0`) into `build/` once.
+integration` runs kjak v1.2.0: `KJAK_BIN=/path/to/kjak`, else it builds it
+(`go install github.com/magicdrive/kjak@v1.2.0`) into `build/` once; `make
+integration-compat` runs the same tests with kjak v1.1.0.
 
 Releases are made with Hephaestus from `hephaestus.yaml`
 ([releasing](docs/release.md)): `make release-check snapshot`, and `make

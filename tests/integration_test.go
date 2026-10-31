@@ -1,9 +1,10 @@
-// Package tests runs the plugin under kjak v1.1.0: the real external
+// Package tests runs the plugin under kjak (v1.2.0, and v1.1.0 for
+// protocol v1 compatibility: make integration-compat): the real external
 // feather (discovery, checks, protocol v1, timeouts), with a stub
 // terminal-notifier. No notification is posted.
 //
-// KJAK_BIN names the kjak executable (make integration builds v1.1.0);
-// without it the tests are skipped.
+// KJAK_BIN names the kjak executable (make integration builds v1.2.0, make
+// integration-compat v1.1.0); without it the tests are skipped.
 package tests
 
 import (
@@ -26,7 +27,7 @@ var pluginBin string // built once by TestMain
 
 func TestMain(m *testing.M) {
 	if os.Getenv("KJAK_BIN") == "" || runtime.GOOS != "darwin" {
-		fmt.Println("integration tests skipped: set KJAK_BIN to a kjak v1.1.0 executable (make integration), on macOS")
+		fmt.Println("integration tests skipped: set KJAK_BIN to a kjak v1.2.0 or v1.1.0 executable (make integration), on macOS")
 		os.Exit(0)
 	}
 	dir, err := os.MkdirTemp("", "kjak-notify-macos-bin-")
@@ -312,7 +313,7 @@ level = "info"
 	}
 }
 
-// The example configuration is valid for kjak v1.1.0.
+// The example configuration is valid for kjak.
 func TestExampleConfig(t *testing.T) {
 	s := newSandbox(t, "exit 0")
 	example, err := filepath.Abs("../examples/config.toml")
@@ -325,7 +326,7 @@ func TestExampleConfig(t *testing.T) {
 }
 
 // Every whole configuration of the README and the tutorials (a TOML block
-// with a feather) is valid for kjak v1.1.0.
+// with a feather) is valid for kjak.
 func TestDocumentedConfigs(t *testing.T) {
 	fence := regexp.MustCompile("(?s)```toml\n(.*?)```")
 	n := 0
