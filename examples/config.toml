@@ -1,0 +1,25 @@
+# kjak v1.1.0 configuration (~/.config/kjak/config.toml) for
+# kjak-feather-notify-macos, an experimental macOS notification plugin.
+# Tutorial: ../docs/tutorial.en.md (日本語: ../docs/tutorial.ja.md)
+#
+#   kjak config validate
+#   kjak send --to mac --dry-run "test"            # checks, runs nothing
+#   kjak send --to mac --title "Build" --level success "All tests passed"
+
+[feathers.mac]
+type = "external"
+# runs kjak-feather-notify-macos, found in an absolute directory of PATH
+plugin = "notify-macos"
+# where terminal-notifier is: Homebrew on Apple silicon /opt/homebrew/bin,
+# on Intel /usr/local/bin. Without this setting, the plugin searches the
+# absolute directories of PATH.
+settings = { terminal_notifier = "/usr/local/bin/terminal-notifier" }
+# at least 2s. The plugin stops terminal-notifier 1s before this and reports the
+# notification as unknown (it may have been posted)
+timeout = "10s"
+# pin the plugin's file (optional): no PATH search
+# path = "/Users/me/.local/bin/kjak-feather-notify-macos"
+
+# several feathers at once: kjak send --to everywhere "..."
+# [groups.everywhere]
+# feathers = ["mac", "slack"]

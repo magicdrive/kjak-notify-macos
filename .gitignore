@@ -1,0 +1,8 @@
+/build/
+/coverage.out
+/internal/plugin/testdata/fuzz/
+.claude/
+.mcp.json
+CLAUDE.md
+skills/
+/dist/
